@@ -1,10 +1,16 @@
 package com.solidcode.SCTradingBot.security.user;
 
+import com.solidcode.SCTradingBot.security.role.Role;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.util.ArrayList;
+import java.util.Collection;
+
+import static jakarta.persistence.FetchType.EAGER;
 
 @Entity
 @Table(name = "user")
@@ -26,6 +32,12 @@ public class User {
     private String completeName;
     @Column(name = "status")
     private String status;
+    @ManyToMany(fetch = EAGER)
+    @JoinTable(
+            name = "user_role",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id"))
+    private Collection<Role> roles = new ArrayList<>();
 
     public User(String username, String password, String completeName, String status) {
         this.username = username;

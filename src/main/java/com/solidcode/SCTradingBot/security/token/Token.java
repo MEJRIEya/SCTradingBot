@@ -2,11 +2,13 @@ package com.solidcode.SCTradingBot.security.token;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.solidcode.SCTradingBot.security.permission.Permission;
 import com.solidcode.SCTradingBot.security.user.User;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Token {
 
@@ -17,13 +19,15 @@ public class Token {
     }
 
     public String createAccessToken(User user, String issuer) {
-        List<String> permissions = new ArrayList<>();
-        permissions.add("ALL");
+        List<Permission> permissions = new ArrayList<>();
+        user.getRoles().forEach(role -> {
+            permissions.addAll(role.getPermissions());
+        });
         return JWT.create()
                 .withSubject(user.getUsername())
                 .withExpiresAt(new Date(System.currentTimeMillis() + 60 * 60 * 1000))
                 .withIssuer(issuer)
-                .withClaim("permissions", permissions)
+                .withClaim("permissions", permissions.stream().map(Permission::getDescription).collect(Collectors.toList()))
                 .sign(algorithm);
     }
 
