@@ -38,7 +38,6 @@ public class SecurityConfig {
         http.csrf(AbstractHttpConfigurer::disable);
         http.sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS));
         http.authorizeHttpRequests(request -> request.requestMatchers("/token/**").permitAll());
-        //http.authorizeHttpRequests(request -> request.requestMatchers("/**").hasAuthority("ALL"));
         loadApiAccessPermissions(http);
         http.authorizeHttpRequests(request -> request.requestMatchers("/**")
                 .permitAll().anyRequest().authenticated());

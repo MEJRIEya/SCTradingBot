@@ -9,6 +9,7 @@ import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import static jakarta.persistence.FetchType.EAGER;
 
@@ -37,12 +38,14 @@ public class User {
             name = "user_role",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id"))
-    private Collection<Role> roles = new ArrayList<>();
+    private List<Role> roles;
 
-    public User(String username, String password, String completeName, String status) {
+    public User(String username, String password, String completeName, String status, List<Role> roles) {
         this.username = username;
         this.password = password;
         this.completeName = completeName;
         this.status = status;
+        this.roles = new ArrayList<>();
+        this.roles.addAll(roles);
     }
 }
