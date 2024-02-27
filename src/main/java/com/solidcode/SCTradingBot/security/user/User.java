@@ -1,5 +1,6 @@
 package com.solidcode.SCTradingBot.security.user;
 
+import com.solidcode.SCTradingBot.market.user_coin.UserCoin;
 import com.solidcode.SCTradingBot.security.role.Role;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
