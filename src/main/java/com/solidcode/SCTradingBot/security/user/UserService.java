@@ -5,7 +5,10 @@ import com.solidcode.SCTradingBot.security.role.RoleRepo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -17,6 +20,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -63,7 +67,7 @@ public class UserService implements UserDetailsService {
             throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Status should be valid.");
         }
 
-        if(apiUserPayload.getRoles() == null || apiUserPayload.getRoles().isEmpty()) {
+        if(apiUserPayload.getRolePayloads() == null || apiUserPayload.getRolePayloads().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "User should have at least one role assigned.");
         }
 
@@ -71,11 +75,21 @@ public class UserService implements UserDetailsService {
             throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Email already used.");
         }
 
+        List<Role> roles = new ArrayList<>();
+
+        apiUserPayload.getRolePayloads().forEach(rolePayload -> {
+            Role role = roleRepo.findByRoleId(rolePayload.getRoleId());
+            if(role == null) {
+                throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Role does not exist.");
+            }
+            roles.add(role);
+        });
+
         com.solidcode.SCTradingBot.security.user.User apiUser = new com.solidcode.SCTradingBot.security.user.User(apiUserPayload.getUsername(),
                 passwordEncoder().encode(apiUserPayload.getPassword()),
                 apiUserPayload.getCompleteName(),
                 apiUserPayload.getStatus(),
-                apiUserPayload.getRoles());
+                roles);
 
         userRepo.save(apiUser);
         apiUserPayload.setUserId(apiUser.getUserId());
@@ -107,9 +121,15 @@ public class UserService implements UserDetailsService {
             apiUser.setStatus(apiUserPayload.getStatus());
         }
 
-        if(apiUserPayload.getRoles() != null && apiUserPayload.getRoles().isEmpty()) {
+        if(apiUserPayload.getRolePayloads() != null && apiUserPayload.getRolePayloads().isEmpty()) {
             apiUser.getRoles().clear();
-            apiUser.getRoles().addAll(apiUserPayload.getRoles());
+            apiUserPayload.getRolePayloads().forEach(rolePayload -> {
+                Role role = roleRepo.findByRoleId(rolePayload.getRoleId());
+                if(role == null) {
+                    throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "Role does not exist.");
+                }
+                apiUser.getRoles().add(role);
+            });
         }
 
         userRepo.save(apiUser);
@@ -122,5 +142,14 @@ public class UserService implements UserDetailsService {
             throw new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "User does not exist.");
         }
         userRepo.delete(apiUser);
+    }
+
+    public com.solidcode.SCTradingBot.security.user.User getAuthenticatedUser() {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication instanceof AnonymousAuthenticationToken) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User not authenticated.");
+        }
+        return getUser(authentication.getName());
     }
 }

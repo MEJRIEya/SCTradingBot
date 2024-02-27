@@ -1,6 +1,7 @@
 package com.solidcode.SCTradingBot.security.user;
 
 import com.solidcode.SCTradingBot.security.role.Role;
+import com.solidcode.SCTradingBot.security.role.RolePayload;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,5 +19,5 @@ public class ApiUserPayload {
     private String confirmPassword;
     private String completeName;
     private String status;
-    private List<Role> roles;
+    private List<RolePayload> rolePayloads;
 }
